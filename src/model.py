@@ -112,6 +112,11 @@ class Model(object):
                                           constrained_domain=pBC)
       self.Q_flat_non_periodic = FunctionSpace(self.flat_mesh,"CG",1)
       self.per_func_space = True
+    else :
+      self.Q           = FunctionSpace(self.mesh, "CG", 1)
+      self.Q_flat      = FunctionSpace(self.flat_mesh, "CG", 1)
+      self.Q2          = MixedFunctionSpace([self.Q]*2)
+      self.Q4          = MixedFunctionSpace([self.Q]*4)
    
   def set_mesh(self, mesh):
     """
@@ -125,6 +130,9 @@ class Model(object):
     self.mesh      = mesh
     self.flat_mesh = Mesh(mesh)
     self.Q         = FunctionSpace(mesh, "CG", 1)
+    self.Q_flat      = FunctionSpace(self.flat_mesh, "CG", 1)
+    self.Q2          = MixedFunctionSpace([self.Q]*2)
+    self.Q4          = MixedFunctionSpace([self.Q]*4)
 
   def deform_mesh_to_geometry(self):
     """
@@ -146,7 +154,6 @@ class Model(object):
       x[2] = (x[2] / mesh_height) * ( + self.S_ex(x[0],x[1],x[2]) \
                                       - self.B_ex(x[0],x[1],x[2]) )
       x[2] = x[2] + self.B_ex(x[0], x[1], x[2])
-
 
   def calculate_boundaries(self, mask=None, adot=None):
     """
@@ -925,11 +932,6 @@ class Model(object):
 
     # Function Space
     if self.per_func_space == False:
-      self.Q           = FunctionSpace(self.mesh,      "CG", 1)
-      self.Q_flat      = FunctionSpace(self.flat_mesh, "CG", 1)
-      self.Q2          = MixedFunctionSpace([self.Q]*2)
-      self.Q4          = MixedFunctionSpace([self.Q]*4)
-    
       # surface and bed :
       self.S           = interpolate(self.S_ex, self.Q)
       self.B           = interpolate(self.B_ex, self.Q)
