@@ -1,6 +1,6 @@
 from pylab          import inf, ones, zeros, array, arange, vstack, unique
 from fenics         import project, File, vertex_to_dof_map, Function, \
-                           assemble, sqrt, DoubleArray, Constant, function, MPI
+                           assemble, sqrt, DoubleArray, Constant, function, MPI, plot
 from physics        import *
 from scipy.optimize import fmin_l_bfgs_b
 from time           import time
@@ -112,7 +112,8 @@ class SteadySolver(object):
               s    = '::: saving pressure P.pvd file :::'
               text = colored(s, 'blue')
               print text
-            File(outpath + 'P.pvd') << model.P
+              
+            File(outpath + 'P.pvd') << project(model.P, model.Q)
         model.print_min_max(U, 'U')
 
       # Solve enthalpy (temperature, water content)
