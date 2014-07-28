@@ -31,6 +31,7 @@ class Model(object):
     # for each boundary
     self.boundary_u = []
     self.boundary_v = []
+    self.boundary_w = []
     
     # This list will store the integer value corresponding to each boundary
     self.boundary_values = []
@@ -1055,12 +1056,13 @@ class Model(object):
   boundary
   u, v, w : Components of the velocity on the value (constant for now)
   """   
-  def add_bp_dbc(self, bm, u, v) :
+  def add_bp_dbc(self, bm, u, v, w) :
     # The boundary marker object and the corresponding velocity components
     # are associated by array index
     self.boundary_markers.append(bm)
     self.boundary_u.append(u)
     self.boundary_v.append(v)
+    self.boundary_w.append(w)
     # This is the integer value assigned to this value, which will be used
     # in the facet function
     self.boundary_values.append(self.marker_val)

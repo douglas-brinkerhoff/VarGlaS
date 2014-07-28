@@ -653,6 +653,8 @@ class VelocityBP(object):
     
     # List of boundary conditions
     self.bcs = []
+    # Vertical velocity boundary condition
+    self.w_bcs = []
 
     # Add any user defined boundary conditions    
     for i in range(len(model.boundary_values)) :
@@ -662,10 +664,13 @@ class VelocityBP(object):
       bound_u = model.boundary_u[i]
       # The v component of velocity on the boundary
       bound_v = model.boundary_v[i]
+      # The w component of velocity on the boundary
+      bound_w = model.boundary_w[i]
       
       # Add the Direchlet boundary condition
       self.bcs.append(DirichletBC(model.Q2.sub(0), bound_u, model.ff, marker_val))
       self.bcs.append(DirichletBC(model.Q2.sub(1), bound_v, model.ff, marker_val))
+      self.w_bcs.append(DirichletBC(model.Q, bound_w, model.ff, marker_val))
     
     # solve nonlinear system :
     if self.model.MPI_rank==0:
@@ -681,7 +686,7 @@ class VelocityBP(object):
       s    = "::: solving BP vertical velocity :::"
       text = colored(s, 'cyan')
       print text
-    solve(self.aw == self.Lw, model.w)
+    solve(self.aw == self.Lw, model.w, bcs = self.w_bcs)
     
 
 class Enthalpy(object):
@@ -1585,7 +1590,8 @@ class Age(object):
    
     if config['age']['use_smb_for_ela']:
       self.bc_age = DirichletBC(model.Q, 0.0, model.ff_acc, 1)
-    
+    elif 'use_ff_for_ela' in config['age'] and config['age']['use_ff_for_ela']:
+      self.bc_age = DirichletBC(model.Q, 0.0, model.ff, 2)
     else:
       def above_ela(x,on_boundary):
         return x[2] > config['age']['ela'] and on_boundary
