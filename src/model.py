@@ -197,7 +197,7 @@ class Model(object):
         text = colored(s, 'magenta')
         print text
       for f in facets(self.mesh):
-        n       = f.normal()    # unit normal vector to facet f
+        n       = f.normal()
         x_m     = f.midpoint().x()
         y_m     = f.midpoint().y()
         z_m     = f.midpoint().z()
@@ -222,7 +222,7 @@ class Model(object):
             self.ff[f] = 4
       
       for f in facets(self.flat_mesh):
-        n       = f.normal()    # unit normal vector to facet f
+        n       = f.normal()
         x_m     = f.midpoint().x()
         y_m     = f.midpoint().y()
         z_m     = f.midpoint().z()
@@ -609,20 +609,20 @@ class Model(object):
       print text
     if type(Q) != FunctionSpace:
       Q = self.Q
-    beta2 = self.beta2
+    beta  = self.beta
     u     = self.u
     v     = self.v
     w     = self.w
     H     = self.S - self.B
   
-    beta2_e = self.extrude(beta2, 3, 2, Q)
-    u_bas_e = self.extrude(u,     3, 2, Q)
-    v_bas_e = self.extrude(v,     3, 2, Q)
-    w_bas_e = self.extrude(w,     3, 2, Q)
+    beta_e  = self.extrude(beta, 3, 2, Q)
+    u_bas_e = self.extrude(u,    3, 2, Q)
+    v_bas_e = self.extrude(v,    3, 2, Q)
+    w_bas_e = self.extrude(w,    3, 2, Q)
 
-    tau_bas_u = project(beta2_e*H*u_bas_e, Q)
-    tau_bas_v = project(beta2_e*H*v_bas_e, Q)
-    tau_bas_w = project(beta2_e*H*w_bas_e, Q)
+    tau_bas_u = project(beta_e*H*u_bas_e, Q)
+    tau_bas_v = project(beta_e*H*v_bas_e, Q)
+    tau_bas_w = project(beta_e*H*w_bas_e, Q)
 
     return as_vector([tau_bas_u, tau_bas_v, tau_bas_w]) 
 
@@ -911,8 +911,8 @@ class Model(object):
         uMin = u_n.vector().array().min()
         uMax = u_n.vector().array().max()
       else:
-        print "print_min_max function requires a Vector, Function, or array," \
-              + " not %s." % type(u)
+        print "print_min_max function requires a Vector, Function, array," \
+              + " or Indexed, not %s." % type(u)
         exit(1)
       s    = title + ' <min, max> : <%f, %f>' % (uMin, uMax)
       text = colored(s, 'yellow')
@@ -985,7 +985,7 @@ class Model(object):
     self.u             = Function(self.Q)
     self.v             = Function(self.Q)
     self.w             = Function(self.Q)
-    self.beta2         = Function(self.Q)
+    self.beta          = Function(self.Q)
     self.mhat          = Function(self.Q)
     self.b             = Function(self.Q)
     self.epsdot        = Function(self.Q)

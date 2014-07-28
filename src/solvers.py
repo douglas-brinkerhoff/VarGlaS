@@ -408,7 +408,7 @@ class AdjointSolver(object):
     
     # Set up file I/O
     self.path          = config['output_path']
-    self.file_b_pvd    = File(self.path + 'beta2.pvd')
+    self.file_b_pvd    = File(self.path + 'beta.pvd')
     self.file_u_pvd    = File(self.path + 'U_obs.pvd')
     self.file_dSdt_pvd = File(self.path + 'dSdt.pvd')
    
@@ -559,6 +559,8 @@ class AdjointSolver(object):
       for ii,c in enumerate(control):
         set_local_from_global(c, c_array[ii*n:(ii+1)*n])
       self.forward_model.solve()
+      model.print_min_max(model.u_o, 'u_o')
+      model.print_min_max(model.v_o, 'v_o')
       I = assemble(self.adjoint_instance.I)
       return I
  
@@ -602,7 +604,7 @@ class AdjointSolver(object):
       bounds_arr = []
       for i in range(2):
         if type(bounds[i]) == int or type(bounds[i]) == float:
-          bounds_arr.append(bounds[i] * ones(model.beta2.vector().size()))
+          bounds_arr.append(bounds[i] * ones(model.beta.vector().size()))
         else:
           bounds_arr.append(get_global(bounds[i]))
       b.append(array(bounds_arr).T)
@@ -628,13 +630,13 @@ class AdjointSolver(object):
       
     # save the output :
     if self.model.MPI_rank==0:
-      s    = '::: saving adjoint beta2, U_obs, and DSdt .pvd files :::'
+      s    = '::: saving adjoint beta, U_obs, and DSdt .pvd files :::'
       text = colored(s, 'blue')
       print text
     U_obs = project(as_vector([model.u_o, model.v_o, 0]))
     dSdt  = project(- (model.u*model.S.dx(0) + model.v*model.S.dx(1)) \
                     + model.w + model.adot)
-    self.file_b_pvd    << model.beta2
+    self.file_b_pvd    << model.beta
     self.file_u_pvd    << U_obs
     self.file_dSdt_pvd << dSdt
 
@@ -679,25 +681,27 @@ class StokesBalanceSolver(object):
     B       = model.B
     H       = S - B
     eta     = model.eta
-    beta2   = model.beta2
+    beta    = model.beta
     
     # get the values at the bed :
-    beta2_e = model.extrude(beta2, 3, 2, Q)
-    u_b_e   = model.extrude(u,     3, 2, Q)
-    v_b_e   = model.extrude(v,     3, 2, Q)
+    beta_e  = model.extrude(beta, 3, 2, Q)
+    u_b_e   = model.extrude(u,    3, 2, Q)
+    v_b_e   = model.extrude(v,    3, 2, Q)
     
     # vertically average :
     etabar = model.vert_integrate(eta, Q)
     etabar = project(model.extrude(etabar, 2, 2, Q) / H)
     ubar   = model.vert_integrate(u, Q)
-    ubar_d = model.vert_integrate(u - u_b_e, Q)
     ubar   = project(model.extrude(ubar, 2, 2, Q) / H)
+    ubar_d = model.vert_integrate(u - u_b_e, Q)
+    ubar_d = model.extrude(ubar_d, 2, 2, Q)
     vbar   = model.vert_integrate(v, Q)
-    vbar_d = model.vert_integrate(v - v_b_e, Q)
     vbar   = project(model.extrude(vbar, 2, 2, Q) / H)
+    vbar_d = model.vert_integrate(v - v_b_e, Q)
+    vbar_d = model.extrude(vbar_d, 2, 2, Q)
 
     # set the model variables so the physics object can solve it :
-    model.beta2_e = beta2_e
+    model.beta_e = beta_e
     model.u_b_e   = u_b_e
     model.v_b_e   = v_b_e
     model.etabar  = etabar
