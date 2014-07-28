@@ -684,8 +684,10 @@ class VelocityBP(object):
       # Add the Direchlet boundary condition
       self.bcs.append(DirichletBC(model.Q2.sub(0), 
                       bound_u, model.ff, marker_val))
-      self.w_bcs.append(DirichletBC(model.Q, bound_w, model.ff, marker_val))
+      self.bcs.append(DirichletBC(model.Q2.sub(1), 
                       bound_v, model.ff, marker_val))
+      self.w_bcs.append(DirichletBC(model.Q,
+                      bound_w, model.ff, marker_val))
     
     # add lateral boundary conditions :  
     if config['velocity']['boundaries'] == 'user_defined':
