@@ -681,7 +681,7 @@ class VelocityBP(object):
       # The w component of velocity on the boundary
       bound_w = model.boundary_w[i]
       
-      # Add the Direchlet boundary condition
+      # Add the Dirichlet boundary conditions
       self.bcs.append(DirichletBC(model.Q2.sub(0), 
                       bound_u, model.ff, marker_val))
       self.bcs.append(DirichletBC(model.Q2.sub(1), 
@@ -693,19 +693,10 @@ class VelocityBP(object):
     if config['velocity']['boundaries'] == 'user_defined':
       u_t = config['velocity']['u_lat_boundary']
       v_t = config['velocity']['v_lat_boundary']
-        
       self.bcs.append(DirichletBC(model.Q2.sub(0), u_t, model.ff, 4))
       self.bcs.append(DirichletBC(model.Q2.sub(1), v_t, model.ff, 4))
-      #self.bcs.append(DirichletBC(model.Q2.sub(0), u_t, model.ff, 6))
-      #self.bcs.append(DirichletBC(model.Q2.sub(1), v_t, model.ff, 6))
-      
-      # Set a boundary condition on the vertical velocity if one is given
-      if 'w_lat_boundary' in config['velocity']:
-        w_t = config['velocity']['w_lat_boundary']
-        self.w_bcs.append(DirichletBC(model.Q,
-                      w_t, model.ff, 4))
-        #self.w_bcs.append(DirichletBC(model.Q,
-        #              w_t, model.ff, 6))
+      self.bcs.append(DirichletBC(model.Q2.sub(0), u_t, model.ff, 6))
+      self.bcs.append(DirichletBC(model.Q2.sub(1), v_t, model.ff, 6))
     
     # solve nonlinear system :
     if self.model.MPI_rank==0:
@@ -1573,7 +1564,6 @@ class Age(object):
       h      = CellSize(model.mesh)
       U      = as_vector([model.u, model.v, model.w])
       vnorm  = sqrt(dot(U,U) + 1e-10)
-      
       phihat = phi + h/(2*vnorm) * dot(U,grad(phi))
       
       # Residual 
@@ -1584,6 +1574,7 @@ class Age(object):
 
     else:
       # Starting and midpoint quantities
+      ahat   = model.ahat
       a0     = model.a0
       uhat   = model.uhat
       vhat   = model.vhat
@@ -1600,18 +1591,19 @@ class Age(object):
       phihat = phi + h/(2*vnorm)*dot(U,grad(phi))
 
       # Midpoint value of age for Crank-Nicholson
-      a_mid = 0.5*(a + a0)
+      a_mid = 0.5*(a + self.ahat)
       
       # Weak form of time dependent residual
-      # BOTE L CHANGED TO IMPLICIT
-      self.F = + (a - a0)/dt * phihat * dx \
-               + dot(U, grad(a)) * phihat * dx \
+      self.F = + (a - a0)/dt * phi * dx \
+               + dot(U, grad(a_mid)) * phihat * dx \
                - 1.0 * phihat * dx
 
-  def solve(self, a0=None, uhat=None, what=None, vhat=None):
+  def solve(self, ahat=None, a0=None, uhat=None, what=None, vhat=None):
     """ 
     Solve the system
-    :param a0     : Age of ice at last time step
+    
+    :param ahat   : Observable estimate of the age
+    :param a0     : Initial age of the ice
     :param uhat   : Horizontal velocity
     :param vhat   : Horizontal velocity perpendicular to :attr:`uhat`
     :param what   : Vertical velocity
@@ -1620,11 +1612,12 @@ class Age(object):
     config = self.config
 
     # Assign values to midpoint quantities and mesh velocity
-    if config['mode'] == 'transient':
+    if ahat:
+      model.assign_variable(model.ahat, ahat)
       model.assign_variable(model.a0,   a0)
-      #model.assign_variable(model.uhat, uhat)
-      #model.assign_variable(model.vhat, vhat)
-      #model.assign_variable(model.what, what)
+      model.assign_variable(model.uhat, uhat)
+      model.assign_variable(model.vhat, vhat)
+      model.assign_variable(model.what, what)
    
     if config['age']['use_smb_for_ela']:
       self.bc_age = DirichletBC(model.Q, 0.0, model.ff_acc, 1)

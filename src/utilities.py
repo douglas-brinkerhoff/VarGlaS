@@ -7,6 +7,7 @@ Utilities file:
   basis functions.
 
 """
+#from gmshpy import *
 import subprocess
 
 from scipy.io          import loadmat, savemat
@@ -20,6 +21,7 @@ from fenics            import interpolate, project, Expression, Function, \
 from data.data_factory import DataFactory
 from pyproj            import Proj, transform
 from termcolor         import colored, cprint
+
 
 class DataInput(object):
   """ 

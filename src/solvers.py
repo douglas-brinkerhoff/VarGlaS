@@ -295,6 +295,10 @@ class TransientSolver(object):
     t_end  = config['t_end']
     dt     = config['time_step']
     thklim = config['free_surface']['thklim']
+    
+    print(t)
+    print(dt)
+    print(t_end)
    
     mesh   = model.mesh 
     smb    = model.smb
@@ -356,8 +360,7 @@ class TransientSolver(object):
 
       # Calculate age update
       if self.config['age']['on']:
-        self.age_instance.solve(A0=model.A, Ahat=model.A, uhat=model.u, 
-                                vhat=model.v, what=model.w, mhat=model.mhat)
+        self.age_instance.solve(a0=model.age, uhat=model.u, vhat=model.v, what=model.w)
         if config['log']: 
           if self.model.MPI_rank==0:
             s    = '::: saving age age.pvd file :::'
@@ -366,7 +369,7 @@ class TransientSolver(object):
           self.file_a << model.age
         model.print_min_max(model.age, 'age')
 
-      # store information : 
+      """# store information : 
       if self.config['log']:
         self.t_log.append(t)
         M = assemble(self.surface_instance.M)
@@ -378,7 +381,9 @@ class TransientSolver(object):
         text = colored(s, 'red', attrs=['bold'])
         print text % (t, time()-tic, M/self.M_prev)
 
-      self.M_prev = M
+      self.M_prev = M"""
+      
+      print t
       t          += dt
       self.step_time.append(time() - tic)
 

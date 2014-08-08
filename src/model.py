@@ -963,10 +963,8 @@ class Model(object):
     
     self.params.globalize_parameters(self) # make all the variables available 
 
-    print("here")
     # Function Space
     if self.per_func_space == False:
-      print("here 1")
       # surface and bed :
       self.S           = interpolate(self.S_ex, self.Q)
       self.B           = interpolate(self.B_ex, self.Q)
@@ -978,7 +976,6 @@ class Model(object):
       self.B           = interpolate(self.B_ex, self.Q_non_periodic)
       self.Shat        = Function(self.Q_flat_non_periodic)
     
-    print("here 2")
     # Coordinates of various types 
     self.x             = SpatialCoordinate(self.mesh)
     self.sigma         = project((self.x[2] - self.B) / (self.S - self.B))
